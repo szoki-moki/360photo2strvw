@@ -94,7 +94,7 @@ capture time and then filename.
 
 Before uploading, each file must have:
 
-- JPEG format, no more than 75 MiB (JPEG-compatible MPO camera previews are
+- JPEG format, no more than 75 MB (JPEG-compatible MPO camera previews are
   accepted and uploaded unchanged)
 - At least 3840 x 1920 pixels and a 2:1 aspect ratio
 - EXIF GPS latitude and longitude
@@ -119,6 +119,66 @@ The content SHA-256 is the duplicate key. Already-published content is skipped.
 Temporary failures while transferring bytes are retried, but an interrupted or
 ambiguous final publication request is marked `uncertain` and is not retried
 automatically, because doing so could publish a duplicate.
+
+## Street View Publish API quotas and limitations
+
+The limits below were checked against Google's documentation on 2026-09-23.
+Google can change project quotas, so treat the quota shown in the selected
+Google Cloud project as authoritative.
+
+| Limit | Current documented value |
+| --- | --- |
+| Default API quota | 2,000 queries per Google Cloud project per day |
+| Cost | API use is free of charge |
+| Photos created per `photo.create` request | One |
+| Maximum photo file size | 75 MB |
+| Maximum photo resolution | 100 megapixels |
+| Batch metadata updates | At most 20 photos per `photos.batchUpdate` request |
+
+Google documents a query quota, not a fixed number of photos per day. Publishing
+one photo requires at least these two Street View Publish API method calls:
+
+1. `photo.startUpload` to obtain a unique upload URL.
+2. `photo.create` to create the photo after transferring its bytes.
+
+Consequently, 2,000 daily queries give a rough planning ceiling of no more than
+about 1,000 successful photos per day if those are the only quota-counted calls.
+This is not a guaranteed daily photo allowance. Retries, failures, status
+checks, listing photos, and other API operations also consume queries, and
+Google's public limits page does not document the quota cost of every part of
+the media-transfer process.
+
+This application uploads photos sequentially, one at a time. The API does not
+provide a batch-create method for still photos. Its batch endpoints retrieve,
+delete, or update existing photo metadata; the documented 20-photo batch limit
+applies specifically to batch metadata updates, not uploads.
+
+Other operational constraints include:
+
+- Google can reject `photo.create` with `RESOURCE_EXHAUSTED` when the uploading
+  account reaches its Street View storage limit. Google does not publish a
+  numeric storage allowance on the API reference page.
+- A successful upload response does not guarantee immediate visibility in
+  Google Maps. Google advises allowing up to four days for connected Photo
+  Spheres to be processed, and an image can later have a Maps status such as
+  `PUBLISHED` or `REJECTED_UNKNOWN`. See the
+  [Google Maps Photo Sphere guidance](https://support.google.com/maps/answer/7012050).
+- Images must also meet Google's Photo Sphere quality, metadata, privacy, and
+  content requirements. Passing the application's local validation does not
+  guarantee acceptance by Google.
+
+See Google's official [Street View Publish API usage limits](https://developers.google.com/streetview/publish/limits),
+[`photo.create` reference](https://developers.google.com/streetview/publish/reference/rest/v1/photo/create),
+and [`photos.batchUpdate` reference](https://developers.google.com/streetview/publish/reference/rest/v1/photos/batchUpdate).
+
+To inspect actual consumption or request more quota:
+
+1. Open **Google Cloud Console > APIs & Services > Enabled APIs & services**.
+2. Select **Street View Publish API**.
+3. Open **Quotas & System Limits** to see the active quota and request an
+   increase, or open **Metrics/Usage** to review consumption.
+4. Add a billing account first if Google requires one for a quota-increase
+   request. The API itself remains free according to Google's limits page.
 
 ## Menu
 

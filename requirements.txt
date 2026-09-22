@@ -1,0 +1,6 @@
+google-auth==2.40.3
+google-auth-oauthlib==1.2.2
+Pillow==11.3.0
+requests==2.32.4
+tzdata==2025.2
+pytest==8.4.1

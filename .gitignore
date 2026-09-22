@@ -209,6 +209,11 @@ tempCodeRunnerFile.py
 # PyPI configuration file
 .pypirc
 
+# Application runtime state (normally stored in a Docker named volume)
+oauth-token.json
+*.sqlite3
+uploaded/
+
 # Marimo
 marimo/_static/
 marimo/_lsp/

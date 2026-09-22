@@ -1,0 +1,29 @@
+services:
+  app:
+    build:
+      context: .
+      args:
+        APP_UID: ${HOST_UID:-1000}
+        APP_GID: ${HOST_GID:-1000}
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      IMAGE_UPLOAD_DIR: /image_upload_dir
+      APP_DATA_DIR: /app/data
+      OAUTH_CALLBACK_PORT: ${OAUTH_CALLBACK_PORT:-8765}
+    volumes:
+      - type: bind
+        source: ${IMAGE_UPLOAD_HOST_DIR:?Set IMAGE_UPLOAD_HOST_DIR in .env}
+        target: /image_upload_dir
+      - type: volume
+        source: app_data
+        target: /app/data
+    ports:
+      - "127.0.0.1:${OAUTH_CALLBACK_PORT:-8765}:${OAUTH_CALLBACK_PORT:-8765}"
+    stdin_open: true
+    tty: true
+    init: true
+
+volumes:
+  app_data:
